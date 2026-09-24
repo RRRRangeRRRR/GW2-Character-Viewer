@@ -2116,7 +2116,7 @@
           </div>
           <div id="loginError" class="error-message" style="display:none;"></div>
           <div style="margin-top:16px;font-size:13px;color:var(--muted);">
-            Puedes generar una API Key en el <a href="https://account.guildwars2.com/application" target="_blank" style="color:var(--cyan);">portal de aplicaciones</a>.
+            Puedes generar una API Key en el <a href="https://account.guildwars2.com/applications" target="_blank" style="color:var(--cyan);">portal de aplicaciones</a>.
             <br>Necesita el permiso <strong>characters</strong>, <strong>guilds</strong> y <strong>builds</strong>.
           </div>
         </div>
