@@ -3760,30 +3760,84 @@
       }
 
       // 6. Obtener el CSS filtrado (eliminar estilos de popups, pestañas, etc.)
-      const styleEl = document.querySelector('style');
-      let css = styleEl ? styleEl.innerHTML : '';
-      const unwantedSelectors = [
-        '.popup', '.tabs-bar', '.tab-btn', '.preview-popup', '.popup-overlay', '.popup-box',
-        '.popup-close', '.popup-title', '.popup-subtitle', '.popup-description', '.popup-facts',
-        '.popup-fact', '.active-tab-name', '.tabs-bar-container', '.tabs-bar-group',
-        '.tabs-bar-label', '.tab-btn-build', '.token-input-group', '.btn', '.btn-group',
-        '.character-list', '.character-card', '.loading', '.error-message', '.spinner',
-        '@keyframes spin', '.creator-panel', '.ref-item .del-ref', '#refListContainer',
-        '.consumible-item'
-      ];
-      let rules = css.split('}').filter(r => r.trim().length > 0);
-      rules = rules.map(r => r + '}');
-      const filteredRules = rules.filter(rule => {
-        const lowerRule = rule.toLowerCase();
-        for (const sel of unwantedSelectors) {
-          if (lowerRule.includes(sel.toLowerCase())) {
-            return false;
-          }
-        }
-        return true;
-      });
-      const cleanCss = filteredRules.join('');
+      // 6. Obtener el CSS cargado desde style.css
+function getLoadedStylesheetCss() {
+  let css = '';
 
+  for (const stylesheet of document.styleSheets) {
+    try {
+      if (!stylesheet.cssRules) continue;
+
+      css += Array.from(stylesheet.cssRules)
+        .map(rule => rule.cssText)
+        .join('\n');
+
+      css += '\n';
+    } catch (error) {
+      console.warn(
+        'No se pudo leer una hoja de estilos:',
+        stylesheet.href,
+        error
+      );
+    }
+  }
+
+  // Compatibilidad con una versión anterior que usase <style> inline
+  if (!css.trim()) {
+    const inlineStyles = document.querySelectorAll('style');
+
+    css = Array.from(inlineStyles)
+      .map(style => style.textContent || '')
+      .join('\n');
+  }
+
+  const unwantedSelectors = [
+    '.popup',
+    '.tabs-bar',
+    '.tab-btn',
+    '.preview-popup',
+    '.popup-overlay',
+    '.popup-box',
+    '.popup-close',
+    '.popup-title',
+    '.popup-subtitle',
+    '.popup-description',
+    '.popup-facts',
+    '.popup-fact',
+    '.active-tab-name',
+    '.tabs-bar-container',
+    '.tabs-bar-group',
+    '.tabs-bar-label',
+    '.tab-btn-build',
+    '.token-input-group',
+    '.btn',
+    '.btn-group',
+    '.character-list',
+    '.character-card',
+    '.loading',
+    '.error-message',
+    '.spinner',
+    '@keyframes spin',
+    '.creator-panel',
+    '.ref-item .del-ref',
+    '#refListContainer',
+    '.consumible-item'
+  ];
+
+  const rules = css
+    .split('}')
+    .filter(rule => rule.trim().length > 0)
+    .map(rule => rule + '}');
+
+  const filteredRules = rules.filter(rule => {
+    const lowerRule = rule.toLowerCase();
+
+    return !unwantedSelectors.some(selector =>
+      lowerRule.includes(selector.toLowerCase())
+    );
+  });
+
+  const cleanCss = filteredRules.join('');
       // 7. Construir el HTML final
       const fullHtml = `
 <!DOCTYPE html>
