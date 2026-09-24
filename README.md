@@ -1,5 +1,5 @@
 # GW2-Character-Viewer
-Herramienta para ver la información de los personajes de una cuenta de Guild Wars 2
+Herramienta para ver la información de los personajes de una cuenta de Guild Wars 2 y crear un documento HTML exportable con toda la información que quieras añadir.
 ## Funcionamiento
 - Debes usar tu clave de API con permisos de <b>guilds</b>, <b>builds</b>, <b>account</b>, <b>characters</b> y <b>wvw</b>.
 - Selecciona un personaje de tu cuenta.
