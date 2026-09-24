@@ -2480,12 +2480,24 @@
         fillCreatorForm();
 
         // 6. Asignar evento al botón exportar (ya existe en el HTML generado)
-        document.getElementById('exportBtn')?.addEventListener('click', function() {
-          const fullHtml = generateStaticHTML(); // Usa la nueva función
-          const previewContent = document.getElementById('previewContent');
-          previewContent.textContent = fullHtml;
-          document.getElementById('previewPopup').classList.add('active');
-        });
+        document.getElementById('exportBtn')?.addEventListener('click', async function() {
+  try {
+    this.disabled = true;
+    this.textContent = '⏳ Generando HTML...';
+
+    const fullHtml = await generateStaticHTML();
+
+    const previewContent = document.getElementById('previewContent');
+    previewContent.textContent = fullHtml;
+    document.getElementById('previewPopup').classList.add('active');
+  } catch (error) {
+    console.error('Error al generar el HTML exportado:', error);
+    alert(`No se pudo generar el HTML exportado: ${error.message}`);
+  } finally {
+    this.disabled = false;
+    this.textContent = '📤 Exportar HTML';
+  }
+});
 
         // 7. Inicializar eventos de consumibles y referencias
         initCreatorEvents();
@@ -2931,7 +2943,7 @@
     // ============================================================
     // EXPORTACIÓN: GENERAR HTML ESTÁTICO (con atributos compactos y sin pestañas)
     // ============================================================
-    function generateStaticHTML() {
+    async function generateStaticHTML() {
       // 1. Obtener datos del formulario
       const title = document.getElementById('editTitle')?.value.trim() || currentCharData?.name || 'Build';
       const subtitle = document.getElementById('editSubtitle')?.value.trim() || '';
@@ -3761,37 +3773,68 @@
 
       // 6. Obtener el CSS filtrado (eliminar estilos de popups, pestañas, etc.)
       // 6. Obtener el CSS cargado desde style.css
-const css = getLoadedStylesheetCss();        
-function getLoadedStylesheetCss() {
+const css = await getLoadedStylesheetCss();       
+async function getLoadedStylesheetCss() {
   let css = '';
 
-  for (const stylesheet of document.styleSheets) {
+  // Primero intenta leer las reglas CSS mediante CSSOM.
+  for (const sheet of Array.from(document.styleSheets)) {
     try {
-      if (!stylesheet.cssRules) continue;
-
-      css += Array.from(stylesheet.cssRules)
-        .map(rule => rule.cssText)
-        .join('\n');
-
-      css += '\n';
+      if (sheet.cssRules && sheet.cssRules.length > 0) {
+        css += Array.from(sheet.cssRules)
+          .map(rule => rule.cssText)
+          .join('\n') + '\n';
+      }
     } catch (error) {
       console.warn(
-        'No se pudo leer una hoja de estilos:',
-        stylesheet.href,
+        'No se pudo leer mediante CSSOM la hoja:',
+        sheet.href,
         error
       );
     }
   }
 
-  // Compatibilidad con una versión anterior que usase <style> inline
+  // Si CSSOM no devuelve reglas, carga las hojas externas mediante fetch().
   if (!css.trim()) {
-    const inlineStyles = document.querySelectorAll('style');
+    const stylesheetLinks = Array.from(
+      document.querySelectorAll('link[rel="stylesheet"][href]')
+    );
 
-    css = Array.from(inlineStyles)
+    for (const link of stylesheetLinks) {
+      try {
+        const response = await fetch(link.href, {
+          credentials: 'same-origin'
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        css += await response.text();
+        css += '\n';
+      } catch (error) {
+        console.warn(
+          'No se pudo cargar la hoja externa:',
+          link.href,
+          error
+        );
+      }
+    }
+  }
+
+  // Compatibilidad con posibles estilos inline antiguos.
+  if (!css.trim()) {
+    css = Array.from(document.querySelectorAll('style'))
       .map(style => style.textContent || '')
       .join('\n');
   }
 
+  if (!css.trim()) {
+    console.error('No se encontró ningún CSS para exportar.');
+  }
+
+  return css;
+}
   const unwantedSelectors = [
     '.popup',
     '.tabs-bar',
