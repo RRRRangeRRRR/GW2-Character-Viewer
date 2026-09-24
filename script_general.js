@@ -2933,6 +2933,7 @@
     // ============================================================
     function generateStaticHTML() {
       // 1. Obtener datos del formulario
+      const css = getLoadedStylesheetCss();
       const title = document.getElementById('editTitle')?.value.trim() || currentCharData?.name || 'Build';
       const subtitle = document.getElementById('editSubtitle')?.value.trim() || '';
       const chipsRaw = document.getElementById('editChips')?.value.trim() || '';
