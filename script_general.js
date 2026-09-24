@@ -3761,6 +3761,7 @@
 
       // 6. Obtener el CSS filtrado (eliminar estilos de popups, pestañas, etc.)
       // 6. Obtener el CSS cargado desde style.css
+const css = getLoadedStylesheetCss();        
 function getLoadedStylesheetCss() {
   let css = '';
 
